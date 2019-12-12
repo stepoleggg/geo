@@ -1,65 +1,29 @@
-import pandas as pd
-import random
-import json
+"""
+термометр
+154fa7d48b23e0a839526061f3bb2591a289aee3e5dfe9e33deb15f45a2c1ef8711d061e61e0f72259d99
 
-def save_data():
-    with open('save.json', 'w') as json_file:
-        json.dump(user_data, json_file)
-
-def load_data():
-    with open('save.json') as json_file:
-        data = json.load(json_file)
-        return data
+географ
+2136beb30b1f745b0670dce6e1a222ff0e19594e732a59144b4fea671da7eb9c0e2ff254d1db5229572ad
+"""
 
 
-df = pd.read_csv("data.csv")
-data = {}
-user_data = load_data()
-for line in df[[";;;;"]].to_numpy():
-    country = line[0].split(";")[0]
-    capital= line[0].split(";")[1]
-    data[country] = capital
+import vk_api
+import message
+from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
+import answer
 
+vk_session = vk_api.VkApi(token="131f746751891d088e9fcbe31dbbf8f092c88f1034226bf45271f3e109619423c748c68b7683599cca97d")
+longpoll = VkBotLongPoll(vk_session, "189739538")
+vk = vk_session.get_api()
 
+print("Bot started")
 
-
-def answer(mes, user_id):
-    user_id = str(user_id)
-    if not user_id in user_data.keys():
-        user_data[user_id] = {}
-        user_data[user_id]["country"] = random.choice(list(data.keys()))
-        user_data[user_id]["i"] = 0
-        save_data()
-        return "Страна: "+user_data[user_id]["country"]
-    i = user_data[user_id]["i"]
-    country = user_data[user_id]["country"]
-    inp = mes
-
-    if inp == "0":
-        user_data[user_id]["country"] = random.choice(list(data.keys()))
-        user_data[user_id]["i"] = 0
-        next_country = user_data[user_id]["country"]
-        save_data()
-        return "Ответ: "+data[country]+"\n\nСледующая страна: "+next_country
-
-    if inp.lower().replace("(","").replace(")","").replace("-","").replace(" ","") == data[country].lower().replace("(","").replace(")","").replace("-","").replace(" ",""):
-        user_data[user_id]["country"] = random.choice(list(data.keys()))
-        user_data[user_id]["i"] = 0
-        next_country = user_data[user_id]["country"]
-        save_data()
-        return "Правильно!\n\nСледующая страна: "+next_country
-    
-    if i+1 < len(data[country]):
-        out = "Неверно!\nПодсказка: "+data[country][:i+1]
-        i+=1
-        user_data[user_id]["i"] = i
-        save_data()
-        return out
-
-    user_data[user_id]["country"] = random.choice(list(data.keys()))
-    user_data[user_id]["i"] = 0
-    next_country = user_data[user_id]["country"]
-    save_data()
-    return "Неверно!\nОтвет: "+data[country]+"\n\nСледующая страна: "+next_country
-
-    
+for event in longpoll.listen():
+    if event.type == VkBotEventType.MESSAGE_NEW:
+        text_message = event.obj.text.lower() 
+        vk_id = event.obj.from_id
+        response, flag, country = answer.answer(text_message, vk_id)
+        if flag:
+            message.send_photo_url(vk, vk_id, response, message.get_flag_url(country), True)
+        else:
+            message.send_text(vk, vk_id, response)
