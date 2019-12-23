@@ -22,8 +22,8 @@ for event in longpoll.listen():
     if event.type == VkBotEventType.MESSAGE_NEW:
         text_message = event.obj.text.lower() 
         vk_id = event.obj.from_id
-        response, flag, country = answer.answer(text_message, vk_id)
+        response, flag, country, keys = answer.answer(text_message, vk_id)
         if flag:
-            message.send_photo_url(vk, vk_id, response, message.get_flag_url(country), True)
+            message.send_photo_urls(vk, vk_id, response, [message.get_flag_url(country), message.get_map_url(country)], True, keyboard=keys)
         else:
-            message.send_text(vk, vk_id, response)
+            message.send_text(vk, vk_id, response, keyboard=keys)
