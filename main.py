@@ -12,18 +12,26 @@ import message
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 import answer
 
-vk_session = vk_api.VkApi(token="131f746751891d088e9fcbe31dbbf8f092c88f1034226bf45271f3e109619423c748c68b7683599cca97d")
-longpoll = VkBotLongPoll(vk_session, "189739538")
-vk = vk_session.get_api()
+def start_bot():
+    try:
+        vk_session = vk_api.VkApi(token="131f746751891d088e9fcbe31dbbf8f092c88f1034226bf45271f3e109619423c748c68b7683599cca97d")
+        longpoll = VkBotLongPoll(vk_session, "189739538")
+        vk = vk_session.get_api()
 
-print("Bot started")
+        print("Bot started")
 
-for event in longpoll.listen():
-    if event.type == VkBotEventType.MESSAGE_NEW:
-        text_message = event.obj.text.lower() 
-        vk_id = event.obj.from_id
-        response, flag, country, keys = answer.answer(text_message, vk_id)
-        if flag:
-            message.send_photo_urls(vk, vk_id, response, [message.get_flag_url(country), message.get_map_url(country)], True, keyboard=keys)
-        else:
-            message.send_text(vk, vk_id, response, keyboard=keys)
+        for event in longpoll.listen():
+            if event.type == VkBotEventType.MESSAGE_NEW:
+                text_message = event.obj.text.lower() 
+                vk_id = event.obj.from_id
+                response, flag, country, keys = answer.answer(text_message, vk_id)
+                if flag:
+                    message.send_photo_urls(vk, vk_id, response, [message.get_flag_url(country), message.get_map_url(country)], True, keyboard=keys)
+                else:
+                    message.send_text(vk, vk_id, response, keyboard=keys)
+    except:
+        start_bot()
+
+start_bot()
+
+
